@@ -59,6 +59,9 @@ SUBSECTION_ORDER = {
                   'Float', 'Systems', 'Scheduling', 'Operations Manager']
 }
 
+# Subsections that use simplified layout (Name and Title only, no Shift/ID/Codes)
+SIMPLE_LAYOUT_SUBSECTIONS = ['Executives', 'HR']
+
 
 def find_header_row(file_path):
     """Find the row containing 'Default Department' in the file."""
@@ -102,13 +105,13 @@ def merge_employee_data(df1, df2):
     """Merge and deduplicate employee data from two DataFrames."""
     print("Merging employee data...")
     
-    # Combine both dataframes
-    combined = pd.concat([df1, df2], ignore_index=True)
+    # Combine both dataframes, putting df2 first to prioritize its data
+    combined = pd.concat([df2, df1], ignore_index=True)
     
-    # Remove duplicates based on Employee Id, keeping the first occurrence
+    # Remove duplicates based on Employee Id, keeping the first occurrence (from df2)
     merged = combined.drop_duplicates(subset=['Employee Id'], keep='first')
     
-    print(f"  Combined {len(df1)} + {len(df2)} = {len(combined)} rows")
+    print(f"  Combined {len(df2)} + {len(df1)} = {len(combined)} rows")
     print(f"  After deduplication: {len(merged)} rows")
     
     return merged
@@ -236,12 +239,19 @@ def create_formatted_output(df, output_path):
     ws.page_margins.top = 0.5
     ws.page_margins.bottom = 0.5
     
-    # Column widths
+    # Column widths - adjust for better layout
     ws.column_dimensions['A'].width = 2
-    for col in range(2, 22):
-        ws.column_dimensions[get_column_letter(col)].width = 12
+    ws.column_dimensions['B'].width = 15  # Office subsection header
+    for col in range(3, 8):
+        ws.column_dimensions[get_column_letter(col)].width = 11
+    ws.column_dimensions['H'].width = 2  # Spacer
+    for col in range(9, 15):
+        ws.column_dimensions[get_column_letter(col)].width = 11
+    ws.column_dimensions['O'].width = 2  # Spacer
+    for col in range(16, 22):
+        ws.column_dimensions[get_column_letter(col)].width = 11
     
-    # Current row and column position
+    # Current row position
     current_row = 1
     
     # Header styles
@@ -252,17 +262,13 @@ def create_formatted_output(df, output_path):
     # Create section headers
     section_cols = {'Office': 2, 'Fabrication': 9, 'Finishing': 16}
     
-    # Add date in first row
-    ws.cell(row=current_row, column=1).value = f"Generated: {datetime.now().strftime('%B %d, %Y')}"
-    current_row += 1
-    
-    # Section headers
+    # Section headers (row 1)
     for section, col in section_cols.items():
         cell = ws.cell(row=current_row, column=col)
         cell.value = section
         cell.font = header_font
     
-    current_row += 2
+    current_row += 2  # Skip a row
     
     # Process each section
     section_rows = {section: current_row for section in SECTION_ORDER}
@@ -281,6 +287,9 @@ def create_formatted_output(df, output_path):
             if len(subsection_df) == 0:
                 continue
             
+            # Check if this subsection uses simple layout
+            use_simple_layout = subsection in SIMPLE_LAYOUT_SUBSECTIONS
+            
             # Subsection header
             cell = ws.cell(row=row, column=col_start)
             cell.value = subsection
@@ -288,25 +297,42 @@ def create_formatted_output(df, output_path):
             row += 1
             
             # Column headers
-            headers = ['Name', 'Shift', 'ID #', 'Title', 'Codes']
-            for i, header in enumerate(headers):
-                cell = ws.cell(row=row, column=col_start + i)
-                cell.value = header
-                cell.font = subheader_font
+            if use_simple_layout:
+                # Simple layout: Name (col+1) and Title (col+4)
+                ws.cell(row=row, column=col_start + 1).value = 'Name'
+                ws.cell(row=row, column=col_start + 1).font = subheader_font
+                ws.cell(row=row, column=col_start + 4).value = 'Title'
+                ws.cell(row=row, column=col_start + 4).font = subheader_font
+            else:
+                # Full layout: Name, Shift, ID #, Title, Codes
+                headers = ['Name', 'Shift', 'ID #', 'Title', 'Codes']
+                for i, header in enumerate(headers):
+                    cell = ws.cell(row=row, column=col_start + i + 1)
+                    cell.value = header
+                    cell.font = subheader_font
             row += 1
             
             # Employee data
             for _, emp in subsection_df.iterrows():
                 name = f"{emp['First Name']} {emp['Last Name']}"
-                ws.cell(row=row, column=col_start).value = name
-                ws.cell(row=row, column=col_start + 1).value = emp['Shift']
-                ws.cell(row=row, column=col_start + 2).value = emp['Employee Id']
-                ws.cell(row=row, column=col_start + 3).value = emp['Simple Title']
-                ws.cell(row=row, column=col_start + 4).value = emp['Status Codes']
                 
-                # Apply font
-                for i in range(5):
-                    ws.cell(row=row, column=col_start + i).font = data_font
+                if use_simple_layout:
+                    # Simple layout
+                    ws.cell(row=row, column=col_start + 1).value = name
+                    ws.cell(row=row, column=col_start + 1).font = data_font
+                    ws.cell(row=row, column=col_start + 4).value = emp['Simple Title']
+                    ws.cell(row=row, column=col_start + 4).font = data_font
+                else:
+                    # Full layout
+                    ws.cell(row=row, column=col_start + 1).value = name
+                    ws.cell(row=row, column=col_start + 2).value = emp['Shift']
+                    ws.cell(row=row, column=col_start + 3).value = emp['Employee Id']
+                    ws.cell(row=row, column=col_start + 4).value = emp['Simple Title']
+                    ws.cell(row=row, column=col_start + 5).value = emp['Status Codes']
+                    
+                    # Apply font to all cells
+                    for i in range(5):
+                        ws.cell(row=row, column=col_start + i + 1).font = data_font
                 
                 row += 1
             
