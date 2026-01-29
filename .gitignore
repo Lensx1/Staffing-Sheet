@@ -23,8 +23,9 @@ wheels/
 .installed.cfg
 *.egg
 
-# Output files
+# Output files - staffing sheets
 Staffing_Sheet_*.xlsx
+*Staffing_Sheet*.xlsx
 
 # IDE
 .vscode/
