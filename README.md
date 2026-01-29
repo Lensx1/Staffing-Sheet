@@ -22,7 +22,50 @@ This tool replaces the Excel VBA-based staffing sheet generator with a clean Pyt
 - ✅ Generates print-ready Excel output for 17x11 landscape paper
 - ✅ Includes generation date in output
 
+## Standalone Executable Version
+
+**Good news!** You can now use this tool without installing Python.
+
+### Using the Pre-built Executable (Windows)
+
+If you have the `StaffingSheetGenerator.exe` file:
+
+1. **No Installation Required** - The executable is self-contained and includes everything needed
+2. **No Python Needed** - Works on any Windows 10/11 machine without Python installed
+3. **Easy to Use** - Just double-click the .exe or run it from Command Prompt
+
+**Quick Start:**
+```cmd
+# Place the .exe in a folder with your HR export files, then:
+StaffingSheetGenerator.exe
+
+# Or specify custom files:
+StaffingSheetGenerator.exe --file1 myfile1.xlsx --file2 myfile2.xlsx
+```
+
+The executable works identically to the Python script - same commands, same features, same output!
+
+### Building from Source
+
+If you want to build the executable yourself:
+
+1. See **[BUILD.md](BUILD.md)** for detailed build instructions
+2. Quick build on Windows: Run `build_exe.bat`
+3. Quick build on Linux/Mac: Run `./build_exe.sh`
+
+The build process creates a standalone executable in the `dist/` folder.
+
+**Why build yourself?**
+- Full control over the build process
+- No need to trust pre-built executables
+- Can customize the build configuration
+- Required if making code modifications
+
+For complete build instructions, troubleshooting, and distribution guidelines, see **[BUILD.md](BUILD.md)**.
+
 ## Requirements
+
+**For the Python Script (not needed for .exe):**
 
 - Python 3.8 or higher
 - pandas

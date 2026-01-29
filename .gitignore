@@ -23,6 +23,10 @@ wheels/
 .installed.cfg
 *.egg
 
+# PyInstaller
+# Note: build.spec is kept in version control as it's our custom config
+*.spec.backup
+
 # Output files - staffing sheets
 Staffing_Sheet_*.xlsx
 *Staffing_Sheet*.xlsx
