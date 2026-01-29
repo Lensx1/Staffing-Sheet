@@ -65,7 +65,7 @@ echo ""
 echo "Building StaffingSheetGenerator executable..."
 echo "This may take a few minutes..."
 echo ""
-pyinstaller build.spec
+python3 -m PyInstaller build.spec
 
 if [ $? -ne 0 ]; then
     echo ""

@@ -101,10 +101,10 @@ echo.
 echo Build Information:
 echo   Built on: %date% %time%
 echo   Built with: PyInstaller
-echo   Python version used: 
 ) > release\RELEASE_INFO.txt
 
-python --version >> release\RELEASE_INFO.txt 2>&1
+REM Add Python version to release info
+for /f "delims=" %%v in ('python --version 2^>^&1') do echo   Python version used: %%v >> release\RELEASE_INFO.txt
 
 REM Create a zip file (requires PowerShell)
 echo.

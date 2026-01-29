@@ -64,7 +64,7 @@ REM Build the executable
 echo Building StaffingSheetGenerator.exe...
 echo This may take a few minutes...
 echo.
-pyinstaller build.spec
+python -m PyInstaller build.spec
 
 if errorlevel 1 (
     echo.

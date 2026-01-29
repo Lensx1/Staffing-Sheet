@@ -19,7 +19,7 @@ a = Analysis(
         'pandas._libs.tslibs.timedeltas',
         'pandas._libs.tslibs.nattype',
         'pandas._libs.tslibs.np_datetime',
-        'pandas._libs.skiplist',
+        # Note: pandas._libs.skiplist may not exist in all pandas versions
     ],
     hookspath=[],
     hooksconfig={},
@@ -44,7 +44,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=True,  # Compresses executable (~30% smaller). Set to False if build fails with UPX errors.
     upx_exclude=[],
     runtime_tmpdir=None,
     console=True,  # Show console window for progress messages
