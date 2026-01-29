@@ -64,14 +64,20 @@ SIMPLE_LAYOUT_SUBSECTIONS = ['Executives', 'HR']
 
 
 def find_header_row(file_path):
-    """Find the row containing 'Default Department' in the file."""
+    """Find the row containing 'Default Department' in the file.
+    
+    Some HR export files have extra header rows before the actual data columns.
+    This function searches for the row with 'Default Department' to identify
+    where the real header begins.
+    """
     try:
         df_raw = pd.read_excel(file_path, header=None)
         for i, row in df_raw.iterrows():
-            if row[0] == "Default Department":
+            # Check if row has at least one element and it's the header
+            if len(row) > 0 and row[0] == "Default Department":
                 return i
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  Warning: Could not search for header row: {e}")
     return None
 
 
@@ -86,16 +92,21 @@ def read_employee_file(file_path):
     file_ext = os.path.splitext(file_path)[1].lower()
     
     if file_ext in ['.xls', '.xlsx']:
-        # Find header row for .xls files that may have extra header rows
+        # Some HR exports have extra header rows; find where real data starts
         header_row = find_header_row(file_path)
         if header_row is not None:
             df = pd.read_excel(file_path, skiprows=header_row, header=0)
+            print(f"  Detected header at row {header_row}")
         else:
             df = pd.read_excel(file_path)
+            print(f"  Using standard header detection")
     elif file_ext == '.csv':
         df = pd.read_csv(file_path)
     else:
         raise ValueError(f"Unsupported file format: {file_ext}")
+    
+    # Strip trailing spaces from column names
+    df.columns = df.columns.str.strip()
     
     print(f"  Loaded {len(df)} rows")
     return df
@@ -134,19 +145,19 @@ def extract_status_codes(row):
     codes = []
     
     # L = Line lead (Primary Status)
-    if pd.notna(row['Primary Status ']) and 'Line lead' in str(row['Primary Status ']):
+    if pd.notna(row['Primary Status']) and 'Line lead' in str(row['Primary Status']):
         codes.append('L')
     
     # O = Offsite employee (Primary Status)
-    if pd.notna(row['Primary Status ']) and 'Offsite' in str(row['Primary Status ']):
+    if pd.notna(row['Primary Status']) and 'Offsite' in str(row['Primary Status']):
         codes.append('O')
     
     # S = Safety Team (Secondary Status)
-    if pd.notna(row['Secondary Status ']) and 'Safety Team' in str(row['Secondary Status ']):
+    if pd.notna(row['Secondary Status']) and 'Safety Team' in str(row['Secondary Status']):
         codes.append('S')
     
     # P = Part Time (Secondary Status)
-    if pd.notna(row['Secondary Status ']) and 'Part Time' in str(row['Secondary Status ']):
+    if pd.notna(row['Secondary Status']) and 'Part Time' in str(row['Secondary Status']):
         codes.append('P')
     
     # T = Trainee/Temp (Not In Payroll status)
@@ -397,9 +408,33 @@ def main():
         print(f"Staffing sheet generated: {args.output}")
         print(f"Total employees: {len(processed_df)}")
         
+    except FileNotFoundError as e:
+        print(f"\n=== ERROR ===")
+        print(f"File not found: {e}")
+        print("Please check that the input files exist in the current directory.")
+        sys.exit(1)
+    except ValueError as e:
+        print(f"\n=== ERROR ===")
+        print(f"Invalid data or file format: {e}")
+        print("Please verify the input files have the expected format.")
+        sys.exit(1)
+    except KeyError as e:
+        print(f"\n=== ERROR ===")
+        print(f"Missing required column: {e}")
+        print("Please verify the input files contain all required columns:")
+        print("  - Default Department")
+        print("  - Work Schedule")
+        print("  - Employee Id")
+        print("  - First Name")
+        print("  - Last Name")
+        print("  - Employee Status")
+        print("  - Jobs (HR)(1)")
+        print("  - Primary Status")
+        print("  - Secondary Status")
+        sys.exit(1)
     except Exception as e:
         print(f"\n=== ERROR ===")
-        print(f"Failed to generate staffing sheet: {e}")
+        print(f"Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
